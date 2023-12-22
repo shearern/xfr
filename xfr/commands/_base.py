@@ -1,8 +1,10 @@
+import sys
 from abc import ABC, abstractmethod
 import urllib.parse
 import argparse
 
-# === Command Handlers =========================================================
+
+class AbortCommand(Exception): pass
 
 
 class XFR_Command:
@@ -10,9 +12,19 @@ class XFR_Command:
     SUBPARSERS = ROOT_PARSER.add_subparsers(title='Sub-Command', dest='command')
     SUBPARSERS.required = True  # Require a sub-command
 
-    @classmethod
-    def execute(cls, argv):
-        cls.ROOT_PARSER.parse_args(argv)
+    @staticmethod
+    def parse(argv):
+        return XFR_Command.ROOT_PARSER.parse_args(argv)
+
+    @staticmethod
+    def parse_and_execute(argv):
+        args = XFR_Command.parse(argv)
+        try:
+            args.func(args)
+        except AbortCommand as e:
+            print(f"ERROR: {e}")
+            sys.exit(2)
+
 
 
 class SubCommand(ABC):
